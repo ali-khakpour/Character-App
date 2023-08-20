@@ -1,107 +1,80 @@
-import { useEffect, useState } from "react";
 import "./App.css";
+import Navbar, {
+  FavouriteButton,
+  ResultCharacter,
+  Search,
+} from "./components/Navbar";
+import CharecterList from "./components/CharecterList";
 import CharacterDetail from "./components/CharacterDetail";
-import CharacterList from "./components/CharacterList";
-import Navbar, { Favourites, Search, SearchResult } from "./components/Navbar";
-import { Toaster, toast } from "react-hot-toast";
+import { character } from "../data/data";
+import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 
 function App() {
-  const [characters, setCharacters] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [characters, setCharacters] = useState(character);
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectId, setSelectId] = useState(null);
   const [favourites, setFavourites] = useState(
-    () => JSON.parse(localStorage.getItem("FAVOURITES")) || []
+    () => JSON.parse(localStorage.getItem("Favourite")) || []
   );
-  const [count, setCount] = useState(0);
 
+  console.log(favourites);
   useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-    async function fetchData() {
+    const getData = async () => {
       try {
-        setIsLoading(true);
         const { data } = await axios.get(
-          `https://rickandmortyapi.com/api/character/?name=${query}`,
-          { signal }
+          `https://rickandmortyapi.com/api/character?name=${query}`
         );
-        setCharacters(data.results.slice(0, 5));
-      } catch (err) {
-        // fetch => err.name ==="AbortError"
-        // axios => axios.isCancel()
-        if (!axios.isCancel()) {
-          setCharacters([]);
-          toast.error(err.response.data.error);
-        }
-      } finally {
-        setIsLoading(false);
+        setCharacters(data.results.slice(0, 13).slice(0, 6));
+      } catch (error) {
+        setCharacters([]);
+        toast.error(error.response.data.error);
       }
-    }
-
-    // if (query.length < 3) {
-    //   setCharacters([]);
-    //   return;
-    // }
-
-    fetchData();
-
-    return () => {
-      controller.abort();
     };
+    getData();
   }, [query]);
 
   useEffect(() => {
-    const interval = setInterval(() => setCount((c) => c + 1), 1000);
-
-    // return function(){}
-    return () => {
-      clearInterval(interval);
-    };
-  }, [count]);
-
-  useEffect(() => {
-    localStorage.setItem("FAVOURITES", JSON.stringify(favourites));
+    localStorage.setItem("Favourite", JSON.stringify(favourites));
   }, [favourites]);
 
-  // console.log(JSON.parse(localStorage.getItem("FAVOURITES")));
-
-  const handleSelectCharacter = (id) => {
-    setSelectedId((prevId) => (prevId === id ? null : id));
+  const seclectHndler = (id) => {
+    setSelectId((prevId) => (prevId === id ? null : id));
   };
 
-  const handleAddFavourite = (char) => {
-    setFavourites((preFav) => [...preFav, char]);
+  const favouriteHandler = (char) => {
+    setFavourites((prev) => [...prev, char]);
+  };
+  const removeFavouriteHandler = (id) => {
+    setFavourites(favourites.filter((f) => f.id !== id));
   };
 
-  const handleDeleteFavourite = (id) => {
-    setFavourites((preFav) => preFav.filter((fav) => fav.id !== id));
-  };
-
-  const isAddToFavourite = favourites.map((fav) => fav.id).includes(selectedId);
+  const isAddCharacter = favourites.map((i) => i.id).includes(selectId);
 
   return (
-    <div className="app">
+    <div>
       <Toaster />
       <Navbar>
         <Search query={query} setQuery={setQuery} />
-        <SearchResult numOfResult={characters.length} />
-        <Favourites
+        <ResultCharacter numOfCharacter={characters} />
+        <FavouriteButton
           favourites={favourites}
-          onDeleteFavourite={handleDeleteFavourite}
+          onRemove={removeFavouriteHandler}
         />
       </Navbar>
+
       <Main>
-        <CharacterList
-          selectedId={selectedId}
-          characters={characters}
-          isLoading={isLoading}
-          onSelectCharacter={handleSelectCharacter}
+        <CharecterList
+          character={characters}
+          onSeclect={seclectHndler}
+          selectId={selectId}
         />
+
         <CharacterDetail
-          selectedId={selectedId}
-          onAddFavourite={handleAddFavourite}
-          isAddToFavourite={isAddToFavourite}
+          selectId={selectId}
+          onFavourite={favouriteHandler}
+          isAddCharacter={isAddCharacter}
         />
       </Main>
     </div>
@@ -111,5 +84,5 @@ function App() {
 export default App;
 
 function Main({ children }) {
-  return <div className="main">{children}</div>;
+  return <main className="main">{children}</main>;
 }

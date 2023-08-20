@@ -1,60 +1,60 @@
 import { HeartIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
 import Modal from "./Modal";
-import { Character } from "./CharacterList";
+import CharacterDetail from "./CharacterDetail";
+import CharecterList, { Charecters } from "./CharecterList";
+import { useState } from "react";
 
-export default function Navbar({ children }) {
+function Navbar({ children, favourites }) {
   return (
-    <nav className="navbar">
-      <Logo />
+    <div className="navbar">
+      <div className="navbar__logo">logo</div>
       {children}
-    </nav>
+    </div>
   );
 }
 
-function Logo() {
-  return <div className="navbar__logo">LOGO 😍</div>;
-}
+export default Navbar;
 
 export function Search({ query, setQuery }) {
   return (
     <input
-      value={query}
-      onChange={(e) => setQuery(e.target.value)}
       type="text"
+      vlaue={query}
+      onChange={(e) => setQuery(e.target.value)}
       className="text-field"
-      placeholder="search..."
+      placeholder="search character"
     />
   );
 }
-
-export function SearchResult({ numOfResult }) {
-  return <div className="navbar__result">Found {numOfResult} characters</div>;
+export function ResultCharacter({ numOfCharacter }) {
+  return (
+    <div className="navbar__result">
+      Found {numOfCharacter.length} Characters
+    </div>
+  );
 }
 
-export function Favourites({ favourites, onDeleteFavourite }) {
+export function FavouriteButton({ favourites, onRemove }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <Modal onOpen={setIsOpen} open={isOpen} title="List of Favourites">
+      <Modal title="Favourte Character" onOpen={setIsOpen} open={isOpen}>
         {favourites.map((item) => (
-          <Character key={item.id} item={item}>
-            <button
-              className="icon red"
-              onClick={() => onDeleteFavourite(item.id)}
-            >
-              <TrashIcon />
-            </button>
-          </Character>
+          <Charecters key={item.id} item={item} onSeclect={()=>{}}  >
+          <button onClick={()=>onRemove(item.id)} className="icon red"><TrashIcon /></button>
+
+          </Charecters>
         ))}
       </Modal>
-      <button className="heart" onClick={() => setIsOpen((is) => !is)}>
+      <button className="heart" onClick={() => setIsOpen(true)}>
         <HeartIcon className="icon" />
-        <span className="badge">{favourites.length}</span>
+        {favourites.length ? (
+          <span className="badge">{favourites.length}</span>
+        ) : (
+          ""
+        )}
       </button>
     </>
   );
 }
-
-// App => Navbar => SearchResult
